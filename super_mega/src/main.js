@@ -1,5 +1,6 @@
 import kaplay from "kaplay";
 import { Player } from "./player";
+import { Enemy } from "./enemy";
 import { initArena } from "./arena";
 
 const DEBUG = true;
@@ -31,6 +32,7 @@ const k = kaplay({
 initArena(k, DEBUG);
 
 const players = new Map();
+const enemies = new Map();
 let localPlayer = null;
 
 ws.onopen = () => {
@@ -64,6 +66,11 @@ ws.onmessage = (event) => {
           k.addKaboom(
             k.vec2(update.message.position.x, update.message.position.y)
           );
+          break;
+        case "enemy_spawn":
+          console.log("=== enemy_spawn ===", update.message);
+          const newEnemy = new Enemy(k, ws, update.message.enemy.position);
+          enemies.set(update.message.enemy.id, newEnemy);
           break;
 
         case "move":
@@ -104,19 +111,28 @@ ws.onmessage = (event) => {
           break;
       }
     } else if (update.type === "player_list") {
-      //   // Server sent a list of all connected players
-      //   update.players.forEach((playerInfo) => {
-      //     if (
-      //       playerInfo.character !== character &&
-      //       !players.has(playerInfo.character)
-      //     ) {
-      //       const newPlayer = new Player(k, playerInfo.character, false);
-      //       players.set(playerInfo.character, newPlayer);
-      //       if (playerInfo.position) {
-      //         newPlayer.setPosition(playerInfo.position.x, playerInfo.position.y);
-      //       }
-      //     }
-      //   });
+      // Server sent a list of all connected players
+      update.players.forEach((playerInfo) => {
+        if (
+          playerInfo.character !== character &&
+          !players.has(playerInfo.character)
+        ) {
+          const newPlayer = new Player(k, ws, playerInfo.character, false);
+          players.set(playerInfo.character, newPlayer);
+          if (playerInfo.position) {
+            newPlayer.setPosition(playerInfo.position.x, playerInfo.position.y);
+          }
+        }
+      });
+    } else if (update.type === "enemy_list") {
+      // Handle the enemy list message
+      console.log("Received enemy list:", update.enemies);
+      update.enemies.forEach((enemy) => {
+        if (!enemies.has(enemy.id)) {
+          const newEnemy = new Enemy(k, ws, enemy.position);
+          enemies.set(enemy.id, newEnemy);
+        }
+      });
     }
   } catch (error) {
     console.error("Error parsing message:", error);

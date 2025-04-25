@@ -1,6 +1,6 @@
 // Constants
-const GAME_WIDTH = 819;
-const GAME_HEIGHT = 819;
+const GAME_WIDTH = 820;
+const GAME_HEIGHT = 820;
 const BOUNDARY_THICKNESS = 10;
 
 // Initialize the arena

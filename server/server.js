@@ -3,7 +3,11 @@ import { createServer } from "http";
 import { WebSocketServer } from "ws";
 import { v4 as uuidv4 } from "uuid";
 import cors from "cors";
-
+import {
+  startEnemySpawner,
+  stopEnemySpawner,
+  enemies,
+} from "./enemy_spawner.js";
 const app = express();
 const port = process.env.PORT || 8080;
 
@@ -14,6 +18,9 @@ const gameSessions = new Map();
 
 // Add a clients map to track all active connections
 const clients = new Map();
+
+// Add a map to track player positions
+const playerPositions = new Map();
 
 const server = createServer(app);
 const wss = new WebSocketServer({ server });
@@ -88,10 +95,13 @@ wss.on("connection", function connection(ws, req) {
 
       // Handle different message types
       if (message.type === "game_action") {
-        // Store player position if this is a move action
-        // if (message.action === "move" && message.position) {
-        //   playerPositions.set(ws.sessionData.character, message.position);
-        // }
+        // Store player position if this is a move or join action
+        if (
+          (message.action === "move" || message.action === "join") &&
+          message.position
+        ) {
+          playerPositions.set(ws.sessionData.character, message.position);
+        }
 
         // Broadcast this message to all other connected clients
         broadcastToAll(
@@ -108,21 +118,84 @@ wss.on("connection", function connection(ws, req) {
     }
   });
 
+  // Send connection established message
   ws.send(
     JSON.stringify({
       type: "connection_established",
       character: ws.sessionData.character,
     })
   );
+
+  // Send all existing enemies to the new player
+  if (enemies.size > 0) {
+    const enemyList = [];
+    enemies.forEach((enemyData, enemyId) => {
+      enemyList.push({
+        id: enemyId,
+        position: enemyData.position,
+      });
+    });
+
+    ws.send(
+      JSON.stringify({
+        type: "enemy_list",
+        enemies: enemyList,
+      })
+    );
+  }
 });
 
-const broadcastToAll = (message, excludeToken = null) => {
+export const broadcastToAll = (message, excludeToken = null) => {
   clients.forEach((client, clientToken) => {
     if (clientToken !== excludeToken && client.readyState === 1) {
       client.send(JSON.stringify(message));
     }
   });
 };
+
+let enemySpawnInterval = null;
+
+// Monitor client connections to start/stop enemy spawner
+setInterval(() => {
+  console.log("clients.size", clients.size);
+  if (clients.size > 0 && enemySpawnInterval === null) {
+    enemySpawnInterval = startEnemySpawner();
+  } else if (clients.size === 0 && enemySpawnInterval !== null) {
+    stopEnemySpawner(enemySpawnInterval);
+    enemySpawnInterval = null;
+    // Clear all enemies when no players are connected
+    enemies.clear();
+  }
+}, 1000);
+
+// Function to send player list to all clients
+function broadcastPlayerList() {
+  if (clients.size === 0) return;
+
+  const playerList = [];
+
+  clients.forEach((client, clientToken) => {
+    const playerInfo = {
+      character: client.sessionData.character,
+      position: playerPositions.get(client.sessionData.character) || null,
+    };
+    playerList.push(playerInfo);
+  });
+
+  const message = {
+    type: "player_list",
+    players: playerList,
+  };
+
+  clients.forEach((client) => {
+    if (client.readyState === 1) {
+      client.send(JSON.stringify(message));
+    }
+  });
+}
+
+// Send player list every 5 seconds
+setInterval(broadcastPlayerList, 5000);
 
 // Start the server
 server.listen(port, () => {
