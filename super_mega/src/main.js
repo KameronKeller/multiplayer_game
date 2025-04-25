@@ -68,7 +68,6 @@ ws.onmessage = (event) => {
           );
           break;
         case "enemy_spawn":
-          console.log("=== enemy_spawn ===", update.message);
           const newEnemy = new Enemy(k, ws, update.message.enemy.position);
           enemies.set(update.message.enemy.id, newEnemy);
           break;
@@ -106,6 +105,16 @@ ws.onmessage = (event) => {
                 update.message.position.x,
                 update.message.position.y
               );
+            }
+          }
+          break;
+
+        case "rotate_gun":
+          // Update other player's gun rotation
+          if (update.from && update.from !== character) {
+            if (players.has(update.from)) {
+              const player = players.get(update.from);
+              player.setGunAngle(update.message.angle);
             }
           }
           break;
