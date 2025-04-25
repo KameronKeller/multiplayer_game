@@ -8,7 +8,7 @@ export class Player {
 
     this.gameObj = k.add([
       k.pos(210, 630),
-      k.circle(20), // Add a circle with radius 20
+      k.circle(10), // Add a circle with radius 20
       k.color(255, 0.5, 1), // Blue color (RGB values from 0-1)
       k.outline(4, k.rgb(0, 0.2, 0.8)), // Optional: add outline
       k.area(), // For collisions if needed
@@ -24,7 +24,7 @@ export class Player {
       k.pos(0, -30),
       k.text(character, { size: 12 }),
       k.anchor("center"),
-      k.color(1, 1, 1),
+      k.color(255, 255, 255),
       {
         follow: this.gameObj,
       },

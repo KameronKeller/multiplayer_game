@@ -1,5 +1,6 @@
 import kaplay from "kaplay";
 import { Player } from "./player";
+import { initArena } from "./arena";
 
 const DEBUG = true;
 
@@ -14,10 +15,7 @@ const token = urlParams.get("token");
 const character = urlParams.get("character");
 
 if (!token || !character) {
-  console.log("=== not found");
-  //   // Redirect back to landing page if no token
   window.location.href = "landingpage.html";
-  //   return;
 }
 
 console.log(`Starting game with token: ${token}`);
@@ -27,76 +25,10 @@ const serverBaseUrl = LOCAL_DEV ? LOCAL_SERVER_BASE_URL : PROD_SERVER_BASE_URL;
 const ws = new WebSocket(`${serverBaseUrl}/?token=${token}`);
 
 const k = kaplay({
-  background: [0, 0, 0], // Set to white background
-  // Or use any color: [r, g, b]
-  // Or set to null for transparent: null
+  background: [0, 0, 0],
 });
 
-k.loadSprite("background", "background.png");
-
-// Add background image
-k.add([
-  k.sprite("background"),
-  k.pos(k.width() / 2, k.height() / 2),
-  k.anchor("center"),
-  k.scale(0.8), // Adjust as needed
-  k.z(-1),
-]);
-
-// Define game boundaries - consider moving these to constants at the top of your file
-const GAME_WIDTH = 819;
-const GAME_HEIGHT = 819;
-const BOUNDARY_THICKNESS = 10;
-
-// You could simplify your boundary creation with a function
-function createBoundaries() {
-  // Top wall
-  k.add([
-    k.rect(GAME_WIDTH, BOUNDARY_THICKNESS),
-    k.pos(k.width() / 2, k.height() / 2 - GAME_HEIGHT / 2),
-    k.anchor("center"),
-    k.area(),
-    k.body({ isStatic: true }),
-    k.opacity(DEBUG ? 0.3 : 0), // Make visible in debug mode
-    "wall",
-  ]);
-
-  // Bottom wall
-  k.add([
-    k.rect(GAME_WIDTH, BOUNDARY_THICKNESS),
-    k.pos(k.width() / 2, k.height() / 2 + GAME_HEIGHT / 2),
-    k.anchor("center"),
-    k.area(),
-    k.body({ isStatic: true }),
-    k.opacity(DEBUG ? 0.3 : 0),
-    "wall",
-  ]);
-
-  // Left wall
-  k.add([
-    k.rect(BOUNDARY_THICKNESS, GAME_HEIGHT),
-    k.pos(k.width() / 2 - GAME_WIDTH / 2, k.height() / 2),
-    k.anchor("center"),
-    k.area(),
-    k.body({ isStatic: true }),
-    k.opacity(DEBUG ? 0.3 : 0),
-    "wall",
-  ]);
-
-  // Right wall
-  k.add([
-    k.rect(BOUNDARY_THICKNESS, GAME_HEIGHT),
-    k.pos(k.width() / 2 + GAME_WIDTH / 2, k.height() / 2),
-    k.anchor("center"),
-    k.area(),
-    k.body({ isStatic: true }),
-    k.opacity(DEBUG ? 0.3 : 0),
-    "wall",
-  ]);
-}
-
-// Call this function after initializing kaplay
-createBoundaries();
+initArena(k, DEBUG);
 
 const players = new Map();
 let localPlayer = null;
@@ -191,13 +123,7 @@ ws.onmessage = (event) => {
   }
 };
 
-k.loadRoot("./"); // A good idea for Itch.io publishing later
-// k.loadSprite("bean", "sprites/test.png");
-
-// k.add([k.pos(120, 80), k.sprite("bean")]);
-
-// const player = new Player(k, ws, character, true);
-// player.setupControls();
+k.loadRoot("./");
 
 if (DEBUG) {
   k.add([k.pos(10, 10), k.text(`Token: ${token}`, { size: 16 })]);
