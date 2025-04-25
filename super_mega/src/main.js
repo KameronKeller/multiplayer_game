@@ -3,6 +3,12 @@ import { Player } from "./player";
 
 const DEBUG = true;
 
+const LOCAL_SERVER_BASE_URL = "http://localhost:8080";
+const PROD_SERVER_BASE_URL =
+  "https://super-mega-backend-512263420060.us-central1.run.app";
+
+const LOCAL_DEV = true;
+
 const urlParams = new URLSearchParams(window.location.search);
 const token = urlParams.get("token");
 const character = urlParams.get("character");
@@ -16,9 +22,81 @@ if (!token || !character) {
 
 console.log(`Starting game with token: ${token}`);
 
-const ws = new WebSocket(`ws://localhost:8080/?token=${token}`);
+const serverBaseUrl = LOCAL_DEV ? LOCAL_SERVER_BASE_URL : PROD_SERVER_BASE_URL;
 
-const k = kaplay();
+const ws = new WebSocket(`${serverBaseUrl}/?token=${token}`);
+
+const k = kaplay({
+  background: [0, 0, 0], // Set to white background
+  // Or use any color: [r, g, b]
+  // Or set to null for transparent: null
+});
+
+k.loadSprite("background", "background.png");
+
+// Add background image
+k.add([
+  k.sprite("background"),
+  k.pos(k.width() / 2, k.height() / 2),
+  k.anchor("center"),
+  k.scale(0.8), // Adjust as needed
+  k.z(-1),
+]);
+
+// Define game boundaries - consider moving these to constants at the top of your file
+const GAME_WIDTH = 819;
+const GAME_HEIGHT = 819;
+const BOUNDARY_THICKNESS = 10;
+
+// You could simplify your boundary creation with a function
+function createBoundaries() {
+  // Top wall
+  k.add([
+    k.rect(GAME_WIDTH, BOUNDARY_THICKNESS),
+    k.pos(k.width() / 2, k.height() / 2 - GAME_HEIGHT / 2),
+    k.anchor("center"),
+    k.area(),
+    k.body({ isStatic: true }),
+    k.opacity(DEBUG ? 0.3 : 0), // Make visible in debug mode
+    "wall",
+  ]);
+
+  // Bottom wall
+  k.add([
+    k.rect(GAME_WIDTH, BOUNDARY_THICKNESS),
+    k.pos(k.width() / 2, k.height() / 2 + GAME_HEIGHT / 2),
+    k.anchor("center"),
+    k.area(),
+    k.body({ isStatic: true }),
+    k.opacity(DEBUG ? 0.3 : 0),
+    "wall",
+  ]);
+
+  // Left wall
+  k.add([
+    k.rect(BOUNDARY_THICKNESS, GAME_HEIGHT),
+    k.pos(k.width() / 2 - GAME_WIDTH / 2, k.height() / 2),
+    k.anchor("center"),
+    k.area(),
+    k.body({ isStatic: true }),
+    k.opacity(DEBUG ? 0.3 : 0),
+    "wall",
+  ]);
+
+  // Right wall
+  k.add([
+    k.rect(BOUNDARY_THICKNESS, GAME_HEIGHT),
+    k.pos(k.width() / 2 + GAME_WIDTH / 2, k.height() / 2),
+    k.anchor("center"),
+    k.area(),
+    k.body({ isStatic: true }),
+    k.opacity(DEBUG ? 0.3 : 0),
+    "wall",
+  ]);
+}
+
+// Call this function after initializing kaplay
+createBoundaries();
 
 const players = new Map();
 let localPlayer = null;

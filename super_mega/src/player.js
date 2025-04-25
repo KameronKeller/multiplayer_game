@@ -3,15 +3,16 @@ export class Player {
     this.k = k;
     this.ws = ws;
     this.character = character;
-    this.isLocalCharacter = isLocalCharacter
+    this.isLocalCharacter = isLocalCharacter;
     this.speed = 200;
 
     this.gameObj = k.add([
-      k.pos(120, 80),
+      k.pos(210, 630),
       k.circle(20), // Add a circle with radius 20
-      k.color(0, 0.5, 1), // Blue color (RGB values from 0-1)
+      k.color(255, 0.5, 1), // Blue color (RGB values from 0-1)
       k.outline(4, k.rgb(0, 0.2, 0.8)), // Optional: add outline
       k.area(), // For collisions if needed
+      k.body(), // Add physics body
       k.anchor("center"), // Center the circle
       {
         character: character,
