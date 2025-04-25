@@ -2,14 +2,15 @@ import kaplay from "kaplay";
 import { Player } from "./player";
 import { Enemy } from "./enemy";
 import { initArena } from "./arena";
+import { Bullet } from "./bullet.js";
 
-const DEBUG = true;
+const DEBUG = false;
 
 const LOCAL_SERVER_BASE_URL = "http://localhost:8080";
 const PROD_SERVER_BASE_URL =
   "https://super-mega-backend-512263420060.us-central1.run.app";
 
-const LOCAL_DEV = true;
+const LOCAL_DEV = false;
 
 const urlParams = new URLSearchParams(window.location.search);
 const token = urlParams.get("token");
@@ -61,14 +62,19 @@ ws.onmessage = (event) => {
     // Handle different message types
     if (update.type === "game_update") {
       switch (update.message.action) {
-        case "kaboom":
-          // Create explosion at the specified position
-          k.addKaboom(
-            k.vec2(update.message.position.x, update.message.position.y)
-          );
-          break;
+        // case "kaboom":
+        //   // Create explosion at the specified position
+        //   k.addKaboom(
+        //     k.vec2(update.message.position.x, update.message.position.y)
+        //   );
+        //   break;
         case "enemy_spawn":
-          const newEnemy = new Enemy(k, ws, update.message.enemy.position);
+          const newEnemy = new Enemy(
+            k,
+            ws,
+            update.message.enemy.position,
+            update.message.enemy.id
+          );
           enemies.set(update.message.enemy.id, newEnemy);
           break;
 
@@ -118,6 +124,37 @@ ws.onmessage = (event) => {
             }
           }
           break;
+
+        case "shoot":
+          // Another player is shooting
+          if (update.from && update.from !== character) {
+            if (players.has(update.from)) {
+              const player = players.get(update.from);
+              const bulletPos = k.vec2(
+                update.message.position.x,
+                update.message.position.y
+              );
+              new Bullet(k, ws, bulletPos, update.message.angle, update.from);
+            }
+          }
+          break;
+
+        case "hit_enemy":
+          // A player hit an enemy
+          if (enemies.has(update.message.enemyId)) {
+            // Create explosion at the hit position
+            k.addKaboom(
+              k.vec2(update.message.position.x, update.message.position.y)
+            );
+
+            // Remove the enemy
+            const enemy = enemies.get(update.message.enemyId);
+            if (enemy && enemy.gameObj) {
+              enemy.gameObj.destroy();
+            }
+            enemies.delete(update.message.enemyId);
+          }
+          break;
       }
     } else if (update.type === "player_list") {
       // Server sent a list of all connected players
@@ -155,13 +192,13 @@ if (DEBUG) {
   k.add([k.pos(10, 30), k.text(`Character: ${character}`, { size: 16 })]);
 }
 
-k.onClick(() => {
-  ws.send(
-    JSON.stringify({
-      type: "game_action",
-      action: "kaboom",
-      position: k.mousePos(),
-    })
-  );
-  k.addKaboom(k.mousePos());
-});
+// k.onClick(() => {
+//   ws.send(
+//     JSON.stringify({
+//       type: "game_action",
+//       action: "kaboom",
+//       position: k.mousePos(),
+//     })
+//   );
+//   k.addKaboom(k.mousePos());
+// });

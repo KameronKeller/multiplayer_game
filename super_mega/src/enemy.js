@@ -1,8 +1,9 @@
 export class Enemy {
-  constructor(k, ws, position) {
+  constructor(k, ws, position, id) {
     this.k = k;
     this.ws = ws;
     this.speed = 200;
+    this.id = id;
 
     this.gameObj = k.add([
       k.pos(position.x, position.y),
@@ -12,8 +13,10 @@ export class Enemy {
       k.area(), // For collisions if needed
       k.body(), // Add physics body
       k.anchor("center"), // Center the circle
+      "enemy", // Tag for collision detection
       {
         speed: 200,
+        id: id, // Store the enemy ID for reference
       },
     ]);
   }

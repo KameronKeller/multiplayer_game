@@ -5,14 +5,20 @@ const PROD_SERVER_BASE_URL =
 const PROD_CLIENT_BASE_URL =
   "https://storage.googleapis.com/super-mega-game-frontend";
 
-const LOCAL_DEV = true;
+const LOCAL_DEV = false;
 
 const joinGame = async (e) => {
   e.preventDefault();
 
   const characterForm = document.getElementById("character-form");
   const formData = new FormData(characterForm);
-  const character = formData.get("character");
+  const character = formData.get("character").trim();
+
+  // Validate character name
+  if (!character) {
+    alert("Please enter a character name");
+    return;
+  }
 
   const serverBaseUrl = LOCAL_DEV
     ? LOCAL_SERVER_BASE_URL

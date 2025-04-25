@@ -1,3 +1,5 @@
+import { Bullet } from "./bullet.js";
+
 export class Player {
   constructor(k, ws, character, isLocalCharacter) {
     this.k = k;
@@ -5,15 +7,26 @@ export class Player {
     this.character = character;
     this.isLocalCharacter = isLocalCharacter;
     this.speed = 200;
+    this.lastShot = 0;
+    this.shootCooldown = 50; // 50ms cooldown between shots
+
+    const r = Math.random() * 255;
+    const g = Math.random() * 255;
+    const b = Math.random() * 255;
+
+    // Generate random starting position between 400 and 600
+    const randomX = 400 + Math.random() * 200;
+    const randomY = 400 + Math.random() * 200;
 
     this.gameObj = k.add([
-      k.pos(210, 630),
+      k.pos(randomX, randomY),
       k.circle(10), // Add a circle with radius 20
-      k.color(255, 0.5, 1), // Blue color (RGB values from 0-1)
+      k.color(r, g, b),
       k.outline(4, k.rgb(0, 0.2, 0.8)), // Optional: add outline
       k.area(), // For collisions if needed
       k.body(), // Add physics body
       k.anchor("center"), // Center the circle
+      "player", // Tag for collision detection
       {
         character: character,
         speed: 200,
@@ -79,6 +92,48 @@ export class Player {
         }
       }
     });
+
+    // Set up shooting controls for local player
+    if (this.isLocalCharacter) {
+      k.onMousePress(() => {
+        this.shoot();
+      });
+    }
+  }
+
+  shoot() {
+    const now = Date.now();
+    // Check if cooldown has passed
+    if (now - this.lastShot < this.shootCooldown) {
+      return;
+    }
+
+    this.lastShot = now;
+
+    // Calculate bullet spawn position at the end of the gun
+    const radians = this.gun.angle * (Math.PI / 180);
+    const spawnOffset = this.k.vec2(
+      Math.cos(radians) * 20,
+      Math.sin(radians) * 20
+    );
+    const bulletPos = this.gameObj.pos.add(spawnOffset);
+
+    // Create a new bullet
+    new Bullet(this.k, this.ws, bulletPos, this.gun.angle, this.character);
+
+    // Send shoot message to server
+    this.sendShootUpdate(bulletPos, this.gun.angle);
+  }
+
+  sendShootUpdate(position, angle) {
+    this.ws.send(
+      JSON.stringify({
+        type: "game_action",
+        action: "shoot",
+        position: { x: position.x, y: position.y },
+        angle: angle,
+      })
+    );
   }
 
   move(x, y) {

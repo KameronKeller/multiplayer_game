@@ -31,7 +31,7 @@ app.get("/", (req, res) => {
 
 app.post("/join-game", (req, res) => {
   const { character } = req.body;
-  console.log("Character selected:", character);
+  //   console.log("Character selected:", character);
 
   if (!character) {
     return res.status(400).json({
@@ -58,14 +58,14 @@ app.post("/join-game", (req, res) => {
 
 // WebSocket connection handling
 wss.on("connection", function connection(ws, req) {
-  console.log("New client connected");
+  //   console.log("New client connected");
 
   // Extract token from URL query parameters
   const url = new URL(req.url, `http://${req.headers.host}`);
   const token = url.searchParams.get("token");
 
   if (!token || !gameSessions.has(token)) {
-    console.log("Invalid or missing token");
+    // console.log("Invalid or missing token");
     ws.close(1008, "Invalid token");
     return;
   }
@@ -73,7 +73,7 @@ wss.on("connection", function connection(ws, req) {
   // Store token and session data with the connection
   ws.token = token;
   ws.sessionData = gameSessions.get(token);
-  console.log(`Client connected with character: ${ws.sessionData.character}`);
+  //   console.log(`Client connected with character: ${ws.sessionData.character}`);
 
   // Add this client to our clients map
   clients.set(token, ws);
@@ -83,15 +83,15 @@ wss.on("connection", function connection(ws, req) {
   ws.on("close", function () {
     // Remove client when they disconnect
     clients.delete(token);
-    console.log(`Client disconnected: ${token}`);
+    // console.log(`Client disconnected: ${token}`);
   });
 
   ws.on("message", function message(data) {
-    console.log("received: %s", data);
+    // console.log("received: %s", data);
 
     try {
       const message = JSON.parse(data);
-      console.log("=== message", message);
+      //   console.log("=== message", message);
 
       // Handle different message types
       if (message.type === "game_action") {
@@ -114,7 +114,7 @@ wss.on("connection", function connection(ws, req) {
         );
       }
     } catch (error) {
-      console.error("Error processing message:", error);
+      //   console.error("Error processing message:", error);
     }
   });
 
@@ -157,7 +157,7 @@ let enemySpawnInterval = null;
 
 // Monitor client connections to start/stop enemy spawner
 setInterval(() => {
-  console.log("clients.size", clients.size);
+  //   console.log("clients.size", clients.size);
   if (clients.size > 0 && enemySpawnInterval === null) {
     enemySpawnInterval = startEnemySpawner();
   } else if (clients.size === 0 && enemySpawnInterval !== null) {

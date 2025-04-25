@@ -9,21 +9,18 @@
 
     <form id="character-form">
       <fieldset>
-        <legend>Select a character:</legend>
+        <legend>Enter your character name:</legend>
 
         <div>
-          <input type="radio" id="huey" name="character" value="huey" checked />
-          <label for="huey">Huey</label>
-        </div>
-
-        <div>
-          <input type="radio" id="dewey" name="character" value="dewey" />
-          <label for="dewey">Dewey</label>
-        </div>
-
-        <div>
-          <input type="radio" id="louie" name="character" value="louie" />
-          <label for="louie">Louie</label>
+          <input
+            type="text"
+            id="character-name"
+            name="character"
+            maxlength="10"
+            required
+            placeholder="Max 10 characters"
+          />
+          <label for="character-name">Character Name</label>
         </div>
       </fieldset>
 

@@ -39,20 +39,20 @@ const spawnEnemy = () => {
     },
   });
 
-  console.log(`Spawned enemy at position:`, position);
+  //   console.log(`Spawned enemy at position:`, position);
 };
 
 // Start enemy spawning if there are clients connected
 
 export const startEnemySpawner = () => {
   const interval = setInterval(spawnEnemy, SPAWN_INTERVAL);
-  console.log("Enemy spawner started");
+//   console.log("Enemy spawner started");
   return interval;
 };
 
 export const stopEnemySpawner = (interval) => {
   if (interval) {
     clearInterval(interval);
-    console.log("Enemy spawner stopped");
+    // console.log("Enemy spawner stopped");
   }
 };
