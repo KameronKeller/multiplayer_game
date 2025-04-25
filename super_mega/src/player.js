@@ -1,8 +1,9 @@
 export class Player {
-  constructor(k, ws, character) {
+  constructor(k, ws, character, isLocalCharacter) {
     this.k = k;
     this.ws = ws;
     this.character = character;
+    this.isLocalCharacter = isLocalCharacter
     this.speed = 200;
 
     this.gameObj = k.add([

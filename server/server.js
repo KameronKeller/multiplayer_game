@@ -88,21 +88,20 @@ wss.on("connection", function connection(ws, req) {
 
       // Handle different message types
       if (message.type === "game_action") {
+        // Store player position if this is a move action
+        // if (message.action === "move" && message.position) {
+        //   playerPositions.set(ws.sessionData.character, message.position);
+        // }
+
         // Broadcast this message to all other connected clients
-        clients.forEach((client, clientToken) => {
-          console.log("=== here");
-          if (clientToken !== token) {
-            client.send(
-              JSON.stringify({
-                type: "game_update",
-                from: ws.sessionData.character,
-                //   action: message.action,
-                message: message,
-                // Include any other relevant data
-              })
-            );
-          }
-        });
+        broadcastToAll(
+          {
+            type: "game_update",
+            from: ws.sessionData.character,
+            message: message,
+          },
+          token
+        );
       }
     } catch (error) {
       console.error("Error processing message:", error);
@@ -116,6 +115,14 @@ wss.on("connection", function connection(ws, req) {
     })
   );
 });
+
+const broadcastToAll = (message, excludeToken = null) => {
+  clients.forEach((client, clientToken) => {
+    if (clientToken !== excludeToken && client.readyState === 1) {
+      client.send(JSON.stringify(message));
+    }
+  });
+};
 
 // Start the server
 server.listen(port, () => {
